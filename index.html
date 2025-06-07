@@ -3,30 +3,419 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Image Generator</title>
-  
-    <link rel="stylesheet" href="style.css">
-    <script type="importmap">
-        {
-            "imports": {}
+    <title>RPG Sprite Character Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sprite-canvas {
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
         }
-    </script>
+        
+        .color-picker {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .part-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 8px;
+        }
+        
+        .part-option {
+            aspect-ratio: 1;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .part-option.selected {
+            border-color: #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        .tab-button {
+            transition: all 0.2s;
+        }
+        
+        .tab-button.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+    </style>
 </head>
-<body>
-    <div class="background-gradient"></div>
-    <div class="container">
-        <h1>AI Image Generator</h1>
-        <p class="mobile-friendly-text">MADE BY MANAS KUMAR RAO</p>
-        <textarea id="prompt-input" placeholder="Enter your image prompt here..."></textarea>
-        <button id="generate-btn">Generate Image</button>
-        <div id="image-display" class="image-display">
-            <!-- Generated image will appear here -->
-            <p id="placeholder-text">Your generated image will appear here.</p>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto p-4 max-w-6xl">
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+                RPG Sprite Generator
+            </h1>
+            <p class="text-gray-400">character designer by manas rao</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Character Preview -->
+            <div class="lg:col-span-1 order-1 lg:order-1">
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4">Character Preview</h2>
+                    
+                    <!-- Canvas Container -->
+                    <div class="flex justify-center mb-4">
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <canvas id="characterCanvas" width="96" height="96" class="sprite-canvas bg-gray-600 rounded"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Animation Controls -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Animation</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button class="animation-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-animation="idle">Idle</button>
+                                <button class="animation-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-animation="walk">Walk</button>
+                                <button class="animation-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-animation="attack">Attack</button>
+                                <button class="animation-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-animation="cast">Cast</button>
+                                <button class="animation-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-animation="block">Block</button>
+                                <button class="animation-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-animation="jump">Jump</button>
+                                <button class="animation-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-animation="death">Death</button>
+                                <button class="animation-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-animation="victory">Victory</button>
+                                <button class="animation-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-animation="run">Run</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Export Buttons -->
+                        <div class="space-y-2">
+                            <button id="aiGenerate" class="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded transition-colors">
+                                <i class="fas fa-magic mr-2"></i>AI Character Generator
+                            </button>
+                            <button id="randomize" class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded transition-colors">
+                                <i class="fas fa-random mr-2"></i>Randomize
+                            </button>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="exportPNG" class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded transition-colors text-sm">
+                                    <i class="fas fa-download mr-1"></i>PNG
+                                </button>
+                                <button id="exportSVG" class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded transition-colors text-sm">
+                                    <i class="fas fa-download mr-1"></i>SVG
+                                </button>
+                                <button id="exportSpriteSheet" class="px-3 py-2 bg-orange-600 hover:bg-orange-700 rounded transition-colors text-sm">
+                                    <i class="fas fa-th mr-1"></i>Sprite
+                                </button>
+                                <button id="exportGIF" class="px-3 py-2 bg-red-600 hover:bg-red-700 rounded transition-colors text-sm">
+                                    <i class="fas fa-video mr-1"></i>GIF
+                                </button>
+                                <button id="saveCharacter" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors text-sm">
+                                    <i class="fas fa-save mr-1"></i>Save
+                                </button>
+                                <button id="loadCharacter" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors text-sm">
+                                    <i class="fas fa-folder-open mr-1"></i>Load
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Character Customization -->
+            <div class="lg:col-span-2 order-2 lg:order-2">
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4">Customize Character</h2>
+                    
+                    <!-- Presets -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-2">Character Type</label>
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <button id="characterMode" class="mode-btn px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 text-sm">Character</button>
+                            <button id="monsterMode" class="mode-btn px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm">Monster</button>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-2">AI Character Prompt</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="aiPrompt" class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400" 
+                                       placeholder="Click the AI Generator button above for advanced options">
+                                <button id="generateFromPrompt" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded transition-colors" disabled>
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Use the AI Character Generator button above for the full AI experience</p>
+                        </div>
+                        
+                        <label class="block text-sm font-medium mb-2">Quick Presets</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2" id="presetContainer">
+                            <button class="preset-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-preset="warrior">Warrior</button>
+                            <button class="preset-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-preset="mage">Mage</button>
+                            <button class="preset-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-preset="rogue">Rogue</button>
+                            <button class="preset-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-preset="archer">Archer</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Race Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-2">Race</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <button class="race-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-race="human">Human</button>
+                            <button class="race-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-race="elf">Elf</button>
+                            <button class="race-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-race="dwarf">Dwarf</button>
+                            <button class="race-btn px-3 py-2 bg-gray-700 rounded hover:bg-gray-600 text-sm" data-race="orc">Orc</button>
+                        </div>
+                    </div>
+
+                    <!-- Part Customization Tabs -->
+                    <div class="space-y-4">
+                        <!-- Tab Navigation -->
+                        <div class="flex flex-wrap gap-2 border-b border-gray-700 pb-2">
+                            <button class="tab-button px-3 py-2 rounded text-sm" data-tab="body">Body</button>
+                            <button class="tab-button px-3 py-2 rounded text-sm" data-tab="armor">Armor</button>
+                            <button class="tab-button px-3 py-2 rounded text-sm" data-tab="weapons">Weapons</button>
+                            <button class="tab-button px-3 py-2 rounded text-sm" data-tab="accessories">Accessories</button>
+                            <button class="tab-button px-3 py-2 rounded text-sm" data-tab="magic">Magic</button>
+                            <button class="tab-button px-3 py-2 rounded text-sm" data-tab="colors">Colors</button>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div id="tabContent">
+                            <!-- Body Tab -->
+                            <div class="tab-content" data-tab="body">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Head Style</label>
+                                        <div class="part-selector" id="headSelector"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Hair Style</label>
+                                        <div class="part-selector" id="hairSelector"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Eyes</label>
+                                        <div class="part-selector" id="eyesSelector"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Armor Tab -->
+                            <div class="tab-content hidden" data-tab="armor">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Helmet</label>
+                                        <div class="part-selector" id="helmetSelector"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Armor</label>
+                                        <div class="part-selector" id="armorSelector"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Boots</label>
+                                        <div class="part-selector" id="bootsSelector"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Gloves</label>
+                                        <div class="part-selector" id="glovesSelector"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Weapons Tab -->
+                            <div class="tab-content hidden" data-tab="weapons">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Main Weapon</label>
+                                        <div class="part-selector" id="weaponSelector"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Shield</label>
+                                        <div class="part-selector" id="shieldSelector"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Accessories Tab -->
+                            <div class="tab-content hidden" data-tab="accessories">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Cape</label>
+                                        <div class="part-selector" id="capeSelector"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Accessory</label>
+                                        <div class="part-selector" id="accessorySelector"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Magic Tab -->
+                            <div class="tab-content hidden" data-tab="magic">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Aura</label>
+                                        <div class="part-selector" id="auraSelector"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Wings</label>
+                                        <div class="part-selector" id="wingsSelector"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Tail</label>
+                                        <div class="part-selector" id="tailSelector"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Horns</label>
+                                        <div class="part-selector" id="hornsSelector"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Colors Tab -->
+                            <div class="tab-content hidden" data-tab="colors">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Skin Color</label>
+                                        <div class="flex gap-2 flex-wrap" id="skinColorPicker"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Hair Color</label>
+                                        <div class="flex gap-2 flex-wrap" id="hairColorPicker"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Armor Color</label>
+                                        <div class="flex gap-2 flex-wrap" id="armorColorPicker"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Weapon Color</label>
+                                        <div class="flex gap-2 flex-wrap" id="weaponColorPicker"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <p id="loading-text" class="loading-text" style="display: none;">Generating...</p>
     </div>
 
-    <script src="script.js" type="module"></script>
+    <!-- AI Generation Modal -->
+    <div id="aiModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">AI Character Generator</h3>
+                <button id="closeModal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Generation Type -->
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-white">Generation Type</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="characterGenType" class="gen-type-btn px-4 py-2 bg-blue-600 rounded text-white text-sm">Character</button>
+                        <button id="monsterGenType" class="gen-type-btn px-4 py-2 bg-gray-700 rounded text-white text-sm">Monster</button>
+                    </div>
+                </div>
+                
+                <!-- Prompt Input -->
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-white">Describe Your Creation</label>
+                    <textarea id="aiPromptModal" 
+                             class="w-full h-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 resize-none" 
+                             placeholder="Describe your character in detail... (e.g., 'A fierce dragon warrior with glowing red eyes and massive wings' or 'A mystical forest elf mage with nature magic')"></textarea>
+                </div>
+                
+                <!-- Quick Suggestions -->
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-white">Quick Ideas</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="suggestion-btn px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white" data-suggestion="Powerful paladin with holy armor">Holy Paladin</button>
+                        <button class="suggestion-btn px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white" data-suggestion="Dark necromancer with shadow magic">Dark Necromancer</button>
+                        <button class="suggestion-btn px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white" data-suggestion="Agile rogue assassin with twin daggers">Rogue Assassin</button>
+                        <button class="suggestion-btn px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white" data-suggestion="Ancient dragon with breath of fire">Ancient Dragon</button>
+                        <button class="suggestion-btn px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white" data-suggestion="Skeletal warrior undead champion">Undead Champion</button>
+                        <button class="suggestion-btn px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white" data-suggestion="Demonic entity from the void">Void Demon</button>
+                    </div>
+                </div>
+                
+                <!-- Generation Options -->
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-white">Options</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="enhancedAnimations" class="mr-2">
+                            <span class="text-sm text-white">Enhanced AI Animations</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="randomizeColors" class="mr-2" checked>
+                            <span class="text-sm text-white">Randomize Colors</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="includeBackstory" class="mr-2" checked>
+                            <span class="text-sm text-white">Generate Backstory</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-4">
+                    <button id="generateAI" class="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded text-white font-medium">
+                        <i class="fas fa-magic mr-2"></i>Generate
+                    </button>
+                    <button id="randomGenerate" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded text-white">
+                        <i class="fas fa-dice mr-2"></i>Random
+                    </button>
+                </div>
+                
+                <!-- Status Display -->
+                <div id="generationStatus" class="hidden">
+                    <div class="bg-gray-700 rounded p-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-spinner fa-spin mr-2 text-blue-400"></i>
+                            <span class="text-white text-sm">Generating your creation...</span>
+                        </div>
+                        <div class="mt-2 bg-gray-600 rounded-full h-2">
+                            <div id="progressBar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Character Info Modal -->
+    <div id="characterInfoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">Character Generated!</h3>
+                <button id="closeCharacterInfo" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="characterInfoContent" class="space-y-4 text-white">
+                <!-- Character info will be populated here -->
+            </div>
+            
+            <div class="flex gap-3 pt-4">
+                <button id="acceptCharacter" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white font-medium">
+                    <i class="fas fa-check mr-2"></i>Accept
+                </button>
+                <button id="regenerateCharacter" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white">
+                    <i class="fas fa-redo mr-2"></i>Regenerate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.min.js"></script>
+    <script src="character-generator.js"></script>
 </body>
 </html>
-
