@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generator</title>
+  
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+        {
+            "imports": {}
+        }
+    </script>
+</head>
+<body>
+    <div class="background-gradient"></div>
+    <div class="container">
+        <h1>AI Image Generator</h1>
+        <p class="mobile-friendly-text">MADE BY MANAS KUMAR RAO</p>
+        <textarea id="prompt-input" placeholder="Enter your image prompt here..."></textarea>
+        <button id="generate-btn">Generate Image</button>
+        <div id="image-display" class="image-display">
+            <!-- Generated image will appear here -->
+            <p id="placeholder-text">Your generated image will appear here.</p>
+        </div>
+        <p id="loading-text" class="loading-text" style="display: none;">Generating...</p>
+    </div>
+
+    <script src="script.js" type="module"></script>
+</body>
+</html>
+

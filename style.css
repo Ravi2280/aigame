@@ -1,0 +1,131 @@
+body {
+    margin: 0;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align items to the start to allow content to flow down */
+    min-height: 100vh;
+    position: relative;
+    padding: 20px; /* Add some padding for mobile */
+    box-sizing: border-box;
+    /* Changed background to a red-purple gradient */
+    background: linear-gradient(to bottom right, #ff0000, #8a2be2);
+    /* Ensure background covers the entire viewport */
+    background-attachment: fixed; /* Keep background fixed while scrolling */
+}
+
+.container {
+    background-color: white;
+    padding: 30px 20px; /* Adjust padding for mobile */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 90%; /* Make container responsive */
+    width: 500px; /* Max width for larger screens */
+    box-sizing: border-box;
+    z-index: 1; /* Ensure content is above background */
+    margin-top: 20px; /* Add some space from the top */
+    margin-bottom: 20px; /* Add space at the bottom */
+}
+
+h1 {
+    /* color: #333; */ /* Remove solid color */
+    margin-top: 0;
+    margin-bottom: 5px; /* Reduce bottom margin to bring small text closer */
+    font-size: 1.5em; /* Adjust font size for mobile */
+    /* Add gradient to text */
+    background: linear-gradient(to bottom right, #ff0000, #8a2be2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text; /* Standard property */
+    color: transparent; /* Ensure text is transparent */
+}
+
+.mobile-friendly-text {
+    font-size: 0.8em; /* Make text smaller */
+    font-style: italic;
+    /* color: #555; */ /* Remove solid color */
+    margin-top: 0; /* Remove top margin */
+    margin-bottom: 20px; /* Add space below this text */
+    text-align: center; /* Ensure it's centered */
+    /* Add gradient to match h1 */
+    background: linear-gradient(to bottom right, #ff0000, #8a2be2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text; /* Standard property */
+    color: transparent; /* Ensure text is transparent */
+    /* Inherits font-family from body (sans-serif), matching h1 */
+}
+
+#prompt-input {
+    width: calc(100% - 20px); /* Adjust width considering padding */
+    height: 100px;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    resize: vertical; /* Allow vertical resize */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+#generate-btn {
+    /* Changed background to a red-purple gradient */
+    background: linear-gradient(to bottom right, #ff0000, #8a2be2);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    /* Removed transition as it doesn't work well with background gradients */
+    width: 100%; /* Full width button on mobile */
+    box-sizing: border-box;
+}
+
+#generate-btn:hover {
+    /* Optional: Add a subtle effect on hover, e.g., change gradient direction or add shadow */
+    /* Keeping it simple for now, maybe just slight opacity change */
+    opacity: 0.9;
+}
+
+#generate-btn:disabled {
+    background-color: #ccc;
+    background: #ccc; /* Ensure solid background when disabled */
+    cursor: not-allowed;
+    opacity: 1; /* Reset opacity */
+}
+
+
+.image-display {
+    margin-top: 20px;
+    border: 1px dashed #ccc;
+    min-height: 200px; /* Minimum height for the display area */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    overflow: hidden; /* Hide image overflow if larger than container */
+    width: 100%; /* Ensure image display takes full width */
+}
+
+.image-display img {
+    max-width: 100%; /* Ensure image fits within the display area */
+    max-height: 400px; /* Limit image height */
+    height: auto; /* Maintain aspect ratio */
+    display: block; /* Remove extra space below image */
+}
+
+#placeholder-text {
+    color: #777;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.loading-text {
+    margin-top: 15px;
+    color: #8a2be2;
+    font-style: italic;
+}
